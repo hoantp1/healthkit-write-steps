@@ -1,0 +1,36 @@
+name: Build StepsWrite IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build unsigned app
+        run: |
+          xcodebuild \
+            -project StepsWrite.xcodeproj \
+            -target StepsWrite \
+            -configuration Release \
+            -sdk iphoneos \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            clean build \
+            CONFIGURATION_BUILD_DIR="$PWD/build"
+
+      - name: Create IPA
+        run: |
+          mkdir -p Payload
+          cp -R build/StepsWrite.app Payload/
+          zip -r StepsWrite-unsigned.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: StepsWrite-unsigned
+          path: StepsWrite-unsigned.ipa
